@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  activemq:
+    image: apache/activemq-classic:latest
+    container_name: sentrypay-activemq
+    ports:
+      - "61616:61616"  #default port for ActiveMQ
+      - "8161:8161"    # default port for ActiveMQ web console
+    environment:
+      - ACTIVEMQ_ADMIN_USER=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin

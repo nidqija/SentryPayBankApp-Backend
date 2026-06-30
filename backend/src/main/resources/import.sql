@@ -1,0 +1,3 @@
+INSERT INTO users (fullname, email, phone_number, dateof_birth, password, anti_phishing_name, created_at) VALUES ('Alice Smith', 'alice@sentrypay.com', 601234567, '1995-05-12', 'hashed_password_123', 'Shield-Sentry-2026', CURRENT_TIMESTAMP);
+INSERT INTO users (fullname, email, phone_number, dateof_birth, password, anti_phishing_name, created_at) VALUES ('Bob Jones', 'bob@sentrypay.com', 601987654, '1990-11-23', 'hashed_password_456', 'Safe-Harbor-99', CURRENT_TIMESTAMP);
+INSERT INTO users (fullname, email, phone_number, dateof_birth, password, anti_phishing_name, created_at) VALUES ('Charlie Brown', 'charlie@sentrypay.com', 601555555, '1988-04-02', 'hashed_password_789', 'Secure-Vault-88', CURRENT_TIMESTAMP);
