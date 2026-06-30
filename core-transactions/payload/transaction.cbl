@@ -10,7 +10,7 @@
 
        01  WS-SRC-ACCOUNT     PIC X(20).
        01  WS-TGT-ACCOUNT     PIC X(20).
-       01  WS-AMOUNT          PIC 9(10)V99.
+       01  WS-AMOUNT          PIC 9(10).
        01  WS-INCOMING-DATA-BLOCK PIC X(100).
 
 

@@ -14,7 +14,7 @@ public class BackendApplication {
 	}
 
 
-	
+
 	@JmsListener(destination = "sentrypay-queue")
 	public void receiveTestMessage(String message) {
 		System.out.println("Received message from SentryPay queue: " + message);
@@ -35,7 +35,9 @@ public class BackendApplication {
 
 			System.out.println("🚀 Spawning native COBOL engine process...");
 
-			String cobolCommand = "../core-transactions/payload/transaction.exe" ;
+			// we use this folder path to run the COBOL engine executable, which is located 
+			// in the core-transactions/payload directory
+			String cobolCommand = "../core-transactions/payload/bank_processor.exe" ;
 
 			ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand , sourceAccount, destinationAccount, String.valueOf(amount));
 

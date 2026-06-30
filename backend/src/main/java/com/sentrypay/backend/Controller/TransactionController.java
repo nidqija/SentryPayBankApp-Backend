@@ -35,6 +35,7 @@ public class TransactionController {
 
         jmsTemplate.convertAndSend("sentrypay-queue", rawCobolRequest); // send the raw COBOL request to the JMS queue
 
+        
         return "Transaction request sent to COBOL queue.";
     }
 }
