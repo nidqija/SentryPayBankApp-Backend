@@ -20,8 +20,6 @@ public class BackendApplication {
 		System.out.println("Received message from SentryPay queue: " + message);
 
 	
-
-
 		try {
 			String sourceAccount = message.substring(0, 10).trim();
 			String destinationAccount = message.substring(10, 20).trim();
