@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sentrypay.backend.domain.user.entity.ServicesEntity;
 import com.sentrypay.backend.domain.user.repository.ServicesRepository;
+import com.sentrypay.backend.dto.ServicesResponse;
 
 
 @RestController
@@ -16,15 +17,20 @@ import com.sentrypay.backend.domain.user.repository.ServicesRepository;
 public class ServicesController {
 
 
+    // create an instance of the ServicesRepository to interact with the database
     private final ServicesRepository servicesRepository;
 
+
+    // instantiate the service repo or any other repo
     public ServicesController(ServicesRepository servicesRepository) {
         this.servicesRepository = servicesRepository;
     }
 
+    
+
 
     @GetMapping("/services")
-    public ResponseEntity<List<ServicesEntity>> getAllServices(){
+    public ResponseEntity<ServicesResponse> getAllServices(){
 
         List<ServicesEntity> services = servicesRepository.findAll();
 
@@ -40,7 +46,10 @@ public class ServicesController {
             System.out.println("Service ID: " + service.getServicesId() + ", Service Name: " + service.getServiceName());
         }
 
-        return ResponseEntity.ok(services);
+        // return the list of services in the response body with a 200 OK status to the client
+        // we first create a new instance of the ServicesResponse class and pass the list of services to its constructor.
+        // the list will then be serialized into JSON format and sent back to the client in the response body.
+        return ResponseEntity.ok(new ServicesResponse(services));
 
     }
 
