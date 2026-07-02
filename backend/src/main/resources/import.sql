@@ -4,3 +4,6 @@ INSERT INTO users (fullname, email, phone_number, dateof_birth, password, anti_p
 INSERT INTO services (service_name, service_description, service_price, service_type, renewal_period , currency , services_id) VALUES ('Netflix Premium', 'Access to Netflix premium features and services.', 29.99, 'Banking', 'Monthly', 'USD', 'service_1');
 INSERT INTO services (service_name, service_description, service_price, service_type, renewal_period, currency, services_id) VALUES ('Spotify Family', 'Access to Spotify family plan with multiple accounts.', 14.99, 'Banking', 'Monthly', 'USD', 'service_2');
 INSERT INTO services (service_name, service_description, service_price, service_type, renewal_period, currency, services_id) VALUES ('Amazon Prime', 'Access to Amazon Prime benefits including free shipping and streaming.', 12.99, 'Banking', 'Monthly', 'USD', 'service_3');
+INSERT INTO wallets (balance, currency, user_id , created_at) VALUES (100.00, 'USD', 1, CURRENT_TIMESTAMP);
+INSERT INTO wallets (balance, currency, user_id, created_at) VALUES (50.00, 'USD', 2, CURRENT_TIMESTAMP);
+INSERT INTO wallets (balance, currency, user_id, created_at) VALUES (75.00, 'USD', 3, CURRENT_TIMESTAMP);
