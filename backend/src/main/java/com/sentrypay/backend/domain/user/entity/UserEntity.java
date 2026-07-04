@@ -10,11 +10,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 
 
@@ -57,6 +59,12 @@ public class UserEntity { // defines the UserEntity class, which represents a us
     // create a one to one relationship between user entity and wallet entity , 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private WalletEntity wallet;
+
+
+    // create one to many relationship between user entity and service subscription entity,
+    // one user can have many service subscriptions, but each service subscription belongs to one user
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ServiceSubscriptionEntity> serviceSubscriptions;
 
     // pre presist method is used for setting the createdAt field to the current date 
     // and time before the entity is persisted to the database

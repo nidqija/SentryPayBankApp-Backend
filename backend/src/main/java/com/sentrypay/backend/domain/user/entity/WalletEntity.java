@@ -20,6 +20,15 @@ import lombok.NoArgsConstructor;
 
 
 
+// The steps of wallet creation are as follows:
+// 1. Wallet Entity
+// 2. Wallet Repository
+// 3. Wallet Response ( DTO )
+// 4. Wallet Controller
+// 5. API Endpoint to create a wallet for a user
+// 6. Kotlin 
+
+
 @Entity // declares that this class is a JPA entity and will be mapped to a database table
 @Table(name = "wallets") // define the table name
 @Data // generates getters, setters, toString, equals, and hashCode methods
