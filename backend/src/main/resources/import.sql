@@ -8,5 +8,6 @@ INSERT INTO wallets (balance, currency, user_id , created_at) VALUES (100.00, 'U
 INSERT INTO wallets (balance, currency, user_id, created_at) VALUES (50.00, 'USD', 2, CURRENT_TIMESTAMP);
 INSERT INTO wallets (balance, currency, user_id, created_at) VALUES (75.00, 'USD', 3, CURRENT_TIMESTAMP);
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (1, 'service_1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'active');
+INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (1, 'service_2', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (2, 'service_2', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (3, 'service_3', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');

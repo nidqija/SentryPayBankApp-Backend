@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sentrypay.backend.domain.user.entity.ServicesEntity;
+import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
 import com.sentrypay.backend.domain.user.repository.ServicesRepository;
+import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepository;
 import com.sentrypay.backend.dto.ServicesResponse;
+import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
@@ -19,11 +23,13 @@ public class ServicesController {
 
     // create an instance of the ServicesRepository to interact with the database
     private final ServicesRepository servicesRepository;
+    private final ServiceSubscriptionRepository serviceSubscriptionRepository;
 
 
     // instantiate the service repo or any other repo
-    public ServicesController(ServicesRepository servicesRepository) {
+    public ServicesController(ServicesRepository servicesRepository , ServiceSubscriptionRepository serviceSubscriptionRepository) {
         this.servicesRepository = servicesRepository;
+        this.serviceSubscriptionRepository = serviceSubscriptionRepository;
     }
 
     
@@ -53,5 +59,34 @@ public class ServicesController {
 
     }
 
-    
+
+    @GetMapping("/users/{userId}/user-services")
+    public ResponseEntity<ServiceSubscriptionResponse> getServicesByUserId(@PathVariable Long userId) {
+
+        
+        List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
+
+        if(serviceSubscriptions.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+
+        List<ServiceSubscriptionResponse.SubscriptionDetails> subscriptionDetailsList = serviceSubscriptions.stream()
+        .map(subscription -> new ServiceSubscriptionResponse.SubscriptionDetails(
+                
+                subscription.getId(),
+                subscription.getService().getServiceName(),
+                subscription.getStatus(),
+                subscription.getService().getServiceType(),
+                subscription.getStartDate().toString(),
+                subscription.getEndDate() != null ? subscription.getEndDate().toString() : null
+        ))
+        .toList();
+
+
+        return ResponseEntity.ok(new ServiceSubscriptionResponse(subscriptionDetailsList));
+
+
+    };
+
 }

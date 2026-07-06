@@ -26,6 +26,9 @@ import lombok.NoArgsConstructor;
 // 4. ServiceSubscription Controller
 // 5. API Endpoint to create a service subscription for a user
 // 6. Kotlin 
+// 7. Kotlin ServiceSubscription Repository
+// 8. Kotlin ServiceSubscription Response ( DTO )
+// 9. Kotlin ViewModel
 
 @Entity // declares that this class is a JPA entity and will be mapped to a database table
 @Table(name = "user_service_subscriptions") // define the table name
