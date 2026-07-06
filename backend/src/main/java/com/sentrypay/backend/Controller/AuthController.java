@@ -71,6 +71,7 @@ public class AuthController {
 
             if (dbUser.getPassword().equals(password)) {
                 var keyString = "dummy-jwt-token"; 
+                var userId = dbUser.getId();
                 logSuccess("login", LoginRequest);
 
                 // Fetching the dynamic string phrase directly from the verified entity
@@ -82,7 +83,8 @@ public class AuthController {
                 // map the key value pairs to return the token  and phishing name to response body
                 Map<String, String> responseBody = Map.of(
                     "token", keyString, 
-                    "antiPhishingName", phishingName
+                    "antiPhishingName", phishingName,
+                    "userId", userId.toString()
                 );
                 
                 // return the response body with the token and anti-phishing name
