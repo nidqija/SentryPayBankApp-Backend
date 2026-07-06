@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.time.format.DateTimeFormatter;
 import com.sentrypay.backend.domain.user.entity.ServicesEntity;
 import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
 import com.sentrypay.backend.domain.user.repository.ServicesRepository;
@@ -70,17 +70,23 @@ public class ServicesController {
             return ResponseEntity.notFound().build();
         }
 
+       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
         List<ServiceSubscriptionResponse.SubscriptionDetails> subscriptionDetailsList = serviceSubscriptions.stream()
-        .map(subscription -> new ServiceSubscriptionResponse.SubscriptionDetails(
+        .map(subscription -> {
+            String formattedStartDate = subscription.getStartDate().format(formatter);
+            String formattedEndDate = subscription.getEndDate() != null ? subscription.getEndDate().format(formatter) : null;
+          return  new ServiceSubscriptionResponse.SubscriptionDetails(
                 
                 subscription.getId(),
                 subscription.getService().getServiceName(),
                 subscription.getStatus(),
                 subscription.getService().getServiceType(),
-                subscription.getStartDate().toString(),
-                subscription.getEndDate() != null ? subscription.getEndDate().toString() : null
-        ))
+                formattedStartDate,
+                formattedEndDate
+        );
+    })
         .toList();
 
 
