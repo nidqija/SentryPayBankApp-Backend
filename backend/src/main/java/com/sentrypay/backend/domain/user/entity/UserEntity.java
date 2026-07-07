@@ -42,7 +42,7 @@ public class UserEntity { // defines the UserEntity class, which represents a us
     private String email;
 
     @Column(nullable = false, unique = true)
-    private int phoneNumber;
+    private String phoneNumber;
 
     @Column(nullable = false, unique = true)
     private String dateofBirth;

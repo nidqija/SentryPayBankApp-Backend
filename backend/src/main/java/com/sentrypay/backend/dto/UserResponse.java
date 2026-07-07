@@ -15,7 +15,8 @@ public record UserResponse(
         Long userId,
         String userName,
         String userEmail,
-        String userFullName
+        String userFullName,
+        String userPhoneNumber
     ) {}
 
 }

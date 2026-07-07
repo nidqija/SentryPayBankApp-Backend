@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.sentrypay.backend.dto.UserResponse;
 
 import com.sentrypay.backend.domain.user.entity.UserEntity;
 import com.sentrypay.backend.domain.user.repository.UserRepository;
@@ -108,16 +109,16 @@ public class AuthController {
 
     @GetMapping("/get-users")
     public ResponseEntity<?> getUsers() {
-        // Fetch all users from the database
         var users = userRepository.findAll();
 
         // Map the UserEntity objects to UserResponse.UserDetails objects
         var userDetailsList = users.stream()
-            .map(user -> new com.sentrypay.backend.dto.UserResponse.UserDetails(
+            .map(user -> new UserResponse.UserDetails(
                 user.getId(),
                 user.getFullname(),
                 user.getEmail(),
-                user.getFullname()
+                user.getFullname(),
+                user.getPhoneNumber()
             ))
             .toList();
 
