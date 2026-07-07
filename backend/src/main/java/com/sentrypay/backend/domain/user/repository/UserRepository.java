@@ -11,6 +11,7 @@ import com.sentrypay.backend.domain.user.entity.UserEntity;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
         Optional<UserEntity> findByEmail(String email);
+
     
     
 }

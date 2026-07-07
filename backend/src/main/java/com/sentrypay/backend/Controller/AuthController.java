@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +44,12 @@ public class AuthController {
     private void logSuccess(String endpoint, Map<String, String> requestBody) {
         System.out.println("\n========================================");
         System.out.println("✅ SENTRY PAY " + endpoint.toUpperCase() + " SUCCESS!");
-        System.out.println("Payload Data: " + requestBody);
+        
+
+        for(Map.Entry<String, String> entry : requestBody.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+        
         System.out.println("========================================\n");
     }
 
@@ -72,6 +78,7 @@ public class AuthController {
             if (dbUser.getPassword().equals(password)) {
                 var keyString = "dummy-jwt-token"; 
                 var userId = dbUser.getId();
+                var userName = dbUser.getFullname();
                 logSuccess("login", LoginRequest);
 
                 // Fetching the dynamic string phrase directly from the verified entity
@@ -84,7 +91,8 @@ public class AuthController {
                 Map<String, String> responseBody = Map.of(
                     "token", keyString, 
                     "antiPhishingName", phishingName,
-                    "userId", userId.toString()
+                    "userId", userId.toString(),
+                    "userName", userName
                 );
                 
                 // return the response body with the token and anti-phishing name
@@ -96,4 +104,31 @@ public class AuthController {
         logError("login", LoginRequest);
         return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
     }
+
+
+    @GetMapping("/get-users")
+    public ResponseEntity<?> getUsers() {
+        // Fetch all users from the database
+        var users = userRepository.findAll();
+
+        // Map the UserEntity objects to UserResponse.UserDetails objects
+        var userDetailsList = users.stream()
+            .map(user -> new com.sentrypay.backend.dto.UserResponse.UserDetails(
+                user.getId(),
+                user.getFullname(),
+                user.getEmail(),
+                user.getFullname()
+            ))
+            .toList();
+
+        // Create a UserResponse object with the list of user details
+        var userResponse = new com.sentrypay.backend.dto.UserResponse(userDetailsList);
+
+        // Return the response entity with the user response
+        return ResponseEntity.ok(userResponse);
+    }
+
+
+    
+    
 }
