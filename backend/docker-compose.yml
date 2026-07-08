@@ -5,7 +5,7 @@ services:
     image: apache/activemq-classic:latest
     container_name: sentrypay-activemq
     ports:
-      - "61616:61616"  #default port for ActiveMQ
+      - "61620:61616"  #default port for ActiveMQ
       - "8161:8161"    # default port for ActiveMQ web console
     environment:
       - ACTIVEMQ_ADMIN_USER=admin
