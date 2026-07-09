@@ -11,3 +11,5 @@ INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_dat
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (1, 'service_2', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (2, 'service_2', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');
 INSERT INTO user_service_subscriptions (user_id, service_id, start_date, end_date, status) VALUES (3, 'service_3', CURRENT_TIMESTAMP, DATEADD('MONTH', 1, CURRENT_TIMESTAMP), 'active');
+INSERT INTO user_transactions (sender_id, receiver_id, amount, created_at) VALUES (1, 2, 29.99, CURRENT_TIMESTAMP);
+INSERT INTO user_transactions (sender_id, receiver_id, amount, created_at) VALUES (1, 3, 14.99, CURRENT_TIMESTAMP);

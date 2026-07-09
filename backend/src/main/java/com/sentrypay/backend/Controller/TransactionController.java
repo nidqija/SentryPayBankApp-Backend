@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 
@@ -37,5 +38,14 @@ public class TransactionController {
 
         
         return "Transaction request sent to COBOL queue.";
+    }
+
+
+
+    @GetMapping("/transaction/{userId}") // define the endpoint for transaction requests
+    public String transactionByUserId(@PathVariable Long userId) {
+        // This method will handle transaction requests for a specific user
+        // Implementation will be added later
+        return "Transaction request for user sent to COBOL queue.";
     }
 }
