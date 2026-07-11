@@ -1,67 +1,88 @@
        IDENTIFICATION DIVISION.
-
        PROGRAM-ID. TRANSACTION.
-
 
        DATA DIVISION.
        WORKING-STORAGE SECTION.
 
-       *> DEFINE VARIABLES FOR COBOL TRANSACTION DATA
+       *> Define exact lengths for fields to prevent extra whitespace issues
+       01  WS-SRC-ACCOUNT         PIC X(10).
+       01  WS-TGT-ACCOUNT         PIC X(10).
 
-       01  WS-SRC-ACCOUNT     PIC X(20).
-       01  WS-TGT-ACCOUNT     PIC X(20).
-       01  WS-AMOUNT          PIC 9(10).
        01  WS-INCOMING-DATA-BLOCK PIC X(100).
 
+       01  WS-DEDUCTED-AMOUNT     PIC 9(8).
+       01  WS-CURRENT-BALANCE     PIC 9(8).
+       01  WS-NEW-BALANCE         PIC 9(8).
 
+       
+       01  WS-AMOUNT-STR             PIC X(8).
+       01  WS-CURRENT-BAL-STR        PIC X(8).
+      
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
 
-           DISPLAY "=======================================".
-           DISPLAY " NATIVE COBOL TRANSACTION CORE ONLINE  ".
-           DISPLAY "=======================================".
-
-           *> ACCEPT INCOMING DATA BLOCK FROM COMMAND LINE
+           *> Accept the space-separated string from the process builder 
+           *> arguments
            ACCEPT WS-INCOMING-DATA-BLOCK FROM COMMAND-LINE.
 
-           *> IF INCOMING DATA BLOCK IS EMPTY , SET DEFAULT VALUES
+           *> move the incoming data block to the working storage fields
+
            IF WS-INCOMING-DATA-BLOCK = SPACES
-               MOVE "NO DATA PROVIDED" TO WS-INCOMING-DATA-BLOCK
-               MOVE "NO DATA PROVIDED" TO WS-SRC-ACCOUNT
-               MOVE 0 TO WS-AMOUNT
+               MOVE "0" TO WS-SRC-ACCOUNT
+               MOVE "0" TO WS-TGT-ACCOUNT
+               MOVE 0   TO WS-DEDUCTED-AMOUNT
+               MOVE 0   TO WS-CURRENT-BALANCE
+               MOVE 0   TO WS-NEW-BALANCE
+               
+
+
            ELSE 
-           *> if incoming data is provided , parse the data block into source 
-           *> account, target account, and amount
-               MOVE WS-INCOMING-DATA-BLOCK(1:10)  TO WS-SRC-ACCOUNT
-               MOVE WS-INCOMING-DATA-BLOCK(11:10) TO WS-TGT-ACCOUNT
-               MOVE WS-INCOMING-DATA-BLOCK(21:8)  TO WS-AMOUNT
+               *> UNSTRING automatically parses space-separated arguments into 
+               *> defined variables
+               UNSTRING WS-INCOMING-DATA-BLOCK DELIMITED BY ALL SPACES
+                   INTO WS-SRC-ACCOUNT
+                        WS-TGT-ACCOUNT
+                        WS-CURRENT-BAL-STR
+                        WS-AMOUNT-STR
+               
+               *> Convert the string amount back into a numeric picture type
+               MOVE FUNCTION NUMVAL(WS-AMOUNT-STR) TO WS-DEDUCTED-AMOUNT
+               MOVE FUNCTION NUMVAL(WS-CURRENT-BAL-STR) TO 
+               WS-CURRENT-BALANCE
 
-           END-IF.
+               IF WS-CURRENT-BALANCE < WS-DEDUCTED-AMOUNT
+                   DISPLAY "ERROR: Insufficient funds for transaction."
+                   UPON SYSERR
+                   MOVE 0 TO WS-NEW-BALANCE
+               ELSE
+                   SUBTRACT WS-DEDUCTED-AMOUNT FROM WS-CURRENT-BALANCE
+                   GIVING WS-NEW-BALANCE
+               END-IF
+           END-IF.         
        
-           *> 3. Display the native extraction results
-           DISPLAY " COBOL PARSED DATA EXTRACT:".
-           DISPLAY " -> Source Account : [" WS-SRC-ACCOUNT "]"
-           DISPLAY " -> Target Account : [" WS-TGT-ACCOUNT "]"
-           DISPLAY " -> Amount In Cents: [" WS-AMOUNT "]"
-           DISPLAY "---------------------------------------".
+           *> CRITICAL FIX FOR LOGGING:
+           *> Print debug information to STDERR (System.err) so Java's 
+           *> getInputStream() 
+           *> reads ONLY the final response code.
+           DISPLAY "=======================================" UPON SYSERR.
+           DISPLAY " NATIVE COBOL TRANSACTION CORE ONLINE  " UPON SYSERR.
+           DISPLAY "=======================================" UPON SYSERR.
+           DISPLAY " COBOL PARSED DATA EXTRACT:"             UPON SYSERR.
+           DISPLAY " -> Source Account : [" WS-SRC-ACCOUNT "]" UPON 
+           SYSERR.
+           DISPLAY " -> Target Account : [" WS-TGT-ACCOUNT "]" UPON 
+           SYSERR.
+           DISPLAY " -> Deducted Amount: [" WS-DEDUCTED-AMOUNT "]" UPON 
+           SYSERR.
+           DISPLAY " -> Current Balance: [" WS-CURRENT-BALANCE "]" UPON 
+           SYSERR.
+           DISPLAY " -> New Balance    : [" WS-NEW-BALANCE "]" UPON 
+           SYSERR.
+           DISPLAY "---------------------------------------" UPON SYSERR.
+           
 
-           *> 4. Output a response string back to Spring Boot's listener
+           *> The ONLY output on standard STDOUT stream. Java will capture 
+           *> this perfectly.
            DISPLAY "0000054073551".
 
            STOP RUN.
-           
-
-
-
-
-
-
-
-
-
-           
-
-
-           
-
-       

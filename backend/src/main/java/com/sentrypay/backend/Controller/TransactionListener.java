@@ -10,20 +10,24 @@ import org.springframework.stereotype.Component;
 public class TransactionListener {
     
     @JmsListener(destination = "sentrypay-queue")
-	public void receiveTestMessage(String message) {
+	public String receiveTestMessage(String message) {
 		System.out.println("Received message from SentryPay queue: " + message);
+		StringBuilder responseBuilder = new StringBuilder();
+		String finalOutput = "990000000000";
 
 	
 		try {
 			String sourceAccount = message.substring(0, 10).trim();
 			String destinationAccount = message.substring(10, 20).trim();
-			String amountString = message.substring(20, 28).trim();
-			int amount = Integer.parseInt(amountString);
+			String currentBalanceString = message.substring(20, 28).trim();
+			String deductionAmountString = message.substring(28, 36).trim();
+			int deductedamount = Integer.parseInt(deductionAmountString);
 
 
 			System.out.println("   -> Parsed Source Acc : " + sourceAccount);
 			System.out.println("   -> Parsed Target Acc : " + destinationAccount);
-			System.out.println("   -> Parsed Amount Cents: " + amount);
+			System.out.println("   -> Parsed Current Balance : " + currentBalanceString);
+			System.out.println("   -> Parsed Deduction Amount : " + deductionAmountString);
 
 			System.out.println("🚀 Spawning native COBOL engine process...");
 
@@ -31,7 +35,7 @@ public class TransactionListener {
 			// in the core-transactions/payload directory
 			String cobolCommand = "../core-transactions/payload/bank_processor.exe" ;
 
-			ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand , sourceAccount, destinationAccount, String.valueOf(amount));
+			ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand , sourceAccount, destinationAccount, currentBalanceString, String.valueOf(deductedamount));
 
 			processBuilder.redirectErrorStream(true); // Merge error stream with output stream
 
@@ -45,12 +49,18 @@ public class TransactionListener {
 
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
+				responseBuilder.append(line).append("\n");
 			}
 
 
 			int exitCode = process.waitFor();
 
 			System.out.println("COBOL engine process exited with code: " + exitCode);
+
+			if(exitCode == 0 && responseBuilder.length() >0){
+				finalOutput = responseBuilder.toString().trim();
+				System.out.println("✅ COBOL Engine Response: " + finalOutput);
+			}
 
 
 
@@ -64,10 +74,10 @@ public class TransactionListener {
 		}
 
 
-	}
+	return finalOutput;	
 
 	
-
+	}
 	
 
 }

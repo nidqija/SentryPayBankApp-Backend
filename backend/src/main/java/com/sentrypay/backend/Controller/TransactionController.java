@@ -1,17 +1,38 @@
 package com.sentrypay.backend.Controller;
 
+import java.math.BigDecimal;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
+ 
+import com.sentrypay.backend.domain.user.repository.WalletRepository;
+import com.sentrypay.backend.dto.TransactionRequest;
+
+import jakarta.transaction.Transactional;
+
+
 
 
 
 @RestController // declaration of the class as a REST controller
 @RequestMapping("/api") // define the base URL for all endpoints in this controller
 public class TransactionController {
+
+    private final WalletRepository walletRepository; // declare a wallet repository for database operations
+
+
+    public TransactionController(WalletRepository walletRepository) {
+        this.walletRepository = walletRepository; // initialize the wallet repository
+    }
+
     
     // autowired is used to inject the JmsTemplate bean into this controller
     // the jmstemplate wont be marked as null because it is autowired by spring, 
@@ -22,30 +43,83 @@ public class TransactionController {
 
     private JmsTemplate jmsTemplate; // declare a JMS template for sending messages to the queue
 
-    @GetMapping("/transaction") // define the endpoint for transaction requests
-    public String transaction() {
+  
+
+    // UNIT TEST TO RECEIVE TRANSACTION REQUEST FROM USER
+    @PostMapping("/user-transactions/{senderId}") // define the endpoint for transaction requests
+    @Transactional
+    public ResponseEntity<String> sendTransactionToUser(@PathVariable Long senderId , @RequestBody TransactionRequest transactionRequest) {
+
+        System.out.println("Received transaction request from user with ID: " + senderId);
+        System.out.println("Receiver ID: " + transactionRequest.receiverId());
+        System.out.println("Amount: " + transactionRequest.amount());
+
         
-        String source = "1234567890";      // 10 chars
-        String destination = "0987654321"; // 10 chars
-        String amountCents = "00010000";   // 8 chars ($100.00 represented in cents)
+        long receiverId = Long.parseLong(transactionRequest.receiverId());
+        BigDecimal amount = transactionRequest.amount();
+
+        var senderWallet = walletRepository.findByUserIdWithLock(senderId).orElseThrow(() -> new RuntimeException("Sender wallet not found"));
 
 
-        String rawCobolRequest = source + destination + amountCents;
+        int currentBalanceCents = BigDecimal.valueOf(senderWallet.getBalance()).multiply(new BigDecimal("100")).intValue(); // convert balance to cents
+        int deductionAmountCents = amount.multiply(new BigDecimal("100")).intValue(); // convert amount to cents
+
+
+        String cobolResponse = callCobolService(senderId, receiverId, currentBalanceCents, deductionAmountCents);
+        
+
+
+        return ResponseEntity.ok("Transaction request sent to user with ID: " + senderId + ". COBOL service response: " + cobolResponse);
+    }
+
+
+      @GetMapping("/transaction") // define the endpoint for transaction requests
+        public String transaction() {
+            
+            String source = "1234567890";      // 10 chars
+            String destination = "0987654321"; // 10 chars
+            String amountCents = "00010000";   // 8 chars ($100.00 represented in cents)
+
+
+            String rawCobolRequest = source + destination + amountCents;
+
+            System.out.println("Raw COBOL Request: " + rawCobolRequest); // log the raw COBOL request
+
+            jmsTemplate.convertAndSend("sentrypay-queue", rawCobolRequest); // send the raw COBOL request to the JMS queue
+
+            
+            return "Transaction request sent to COBOL queue.";
+        }
+
+
+   /*  private void sendT oCobolQueue(String source , String destination , String ){}*/
+
+   // initialize the jms message template to send and receive messages from the queue, 
+   // this is used to send the transaction request to the cobol service and receive the response from the cobol service
+   @Autowired
+   private JmsMessagingTemplate jmsMessagingTemplate;
+
+   private String callCobolService(long senderId, long receiverId, int currentBalanceCents, int deductionAmountCents) {
+
+        // Format the request as a fixed-length string
+        String source = String.format("%010d", senderId); // 10 chars
+        String destination = String.format("%010d", receiverId); // 10 chars
+        String currentBalance = String.format("%08d", currentBalanceCents); // 8 chars
+        String deductionAmount = String.format("%08d", deductionAmountCents); // 8 chars
+
+        String rawCobolRequest = source + destination + currentBalance + deductionAmount;
 
         System.out.println("Raw COBOL Request: " + rawCobolRequest); // log the raw COBOL request
 
-        jmsTemplate.convertAndSend("sentrypay-queue", rawCobolRequest); // send the raw COBOL request to the JMS queue
+        // create a response object to receive the response from the COBOL service
+        Object response =  jmsMessagingTemplate.convertSendAndReceive("sentrypay-queue", rawCobolRequest , String.class); // send the raw COBOL request to the JMS queue
 
-        
-        return "Transaction request sent to COBOL queue.";
+
+        return response != null ? response.toString() : "No response from COBOL service"; // return the response from the COBOL service
     }
 
 
 
-    @GetMapping("/transaction/{userId}") // define the endpoint for transaction requests
-    public String transactionByUserId(@PathVariable Long userId) {
-        // This method will handle transaction requests for a specific user
-        // Implementation will be added later
-        return "Transaction request for user sent to COBOL queue.";
-    }
 }
+
+

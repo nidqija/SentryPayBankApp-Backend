@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/{userId}/user-services").permitAll()
                 .requestMatchers("/api/get-users").permitAll()
                 .requestMatchers("/api/transactions/").permitAll()
+                .requestMatchers("/api/user-transactions/{senderId}").permitAll()
                 .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .anyRequest().authenticated()
             )
