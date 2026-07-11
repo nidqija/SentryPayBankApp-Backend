@@ -50,20 +50,29 @@
                MOVE FUNCTION NUMVAL(WS-CURRENT-BAL-STR) TO 
                WS-CURRENT-BALANCE
 
+               *> if current balance is less than deducted amount , 
+               *> set the new balance to 0 and display an error message
                IF WS-CURRENT-BALANCE < WS-DEDUCTED-AMOUNT
                    DISPLAY "ERROR: Insufficient funds for transaction."
+                   *> syserr is a special file that is used to display 
+                   *> error messages to the console,
                    UPON SYSERR
+                   *> move 0 to new balance to indicate that the transaction 
+                   *> failed
                    MOVE 0 TO WS-NEW-BALANCE
                ELSE
+                   *> if there are sufficient funds, 
+                   *> perform the subtraction to get the new balance
                    SUBTRACT WS-DEDUCTED-AMOUNT FROM WS-CURRENT-BALANCE
+                   *> send the result to the new balance field
                    GIVING WS-NEW-BALANCE
                END-IF
            END-IF.         
        
-           *> CRITICAL FIX FOR LOGGING:
-           *> Print debug information to STDERR (System.err) so Java's 
-           *> getInputStream() 
-           *> reads ONLY the final response code.
+           
+           *> print the parsed data to the console for debugging purposes,
+           *> this will be captured by the Java process builder and 
+           *> logged to the console
            DISPLAY "=======================================" UPON SYSERR.
            DISPLAY " NATIVE COBOL TRANSACTION CORE ONLINE  " UPON SYSERR.
            DISPLAY "=======================================" UPON SYSERR.

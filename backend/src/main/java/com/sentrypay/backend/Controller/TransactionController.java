@@ -55,16 +55,25 @@ public class TransactionController {
         System.out.println("Amount: " + transactionRequest.amount());
 
         
+        // change receiverid from string to long
         long receiverId = Long.parseLong(transactionRequest.receiverId());
+
+        // change the amount from Bigdecimal to int and multiply by 100 to convert to cents
         BigDecimal amount = transactionRequest.amount();
 
+        // retrieve the sender's wallet from the database using the senderId, and lock it for update to prevent concurrent modifications
+        // we lock it because we want to make sure the balance is not changed by another user's transaction while we are processing this one
+        // by doing this , user A cannot send money to user B while user B is sending money to user A, because the wallet is locked for update until the transaction is complete
         var senderWallet = walletRepository.findByUserIdWithLock(senderId).orElseThrow(() -> new RuntimeException("Sender wallet not found"));
 
 
+        // convert the sender's balance and the transaction amount to cents (integer representation) for COBOL processing
         int currentBalanceCents = BigDecimal.valueOf(senderWallet.getBalance()).multiply(new BigDecimal("100")).intValue(); // convert balance to cents
         int deductionAmountCents = amount.multiply(new BigDecimal("100")).intValue(); // convert amount to cents
 
 
+        // cobol only accepts fixed-length strings , so we need to format the senderId, receiverId, currentBalanceCents, and deductionAmountCents as fixed-length strings before sending them to the COBOL service
+        // example: if senderId is 123, we need to format it as 0000000123 (10 chars) before sending it to the COBOL service
         String cobolResponse = callCobolService(senderId, receiverId, currentBalanceCents, deductionAmountCents);
         
 
@@ -92,7 +101,6 @@ public class TransactionController {
         }
 
 
-   /*  private void sendT oCobolQueue(String source , String destination , String ){}*/
 
    // initialize the jms message template to send and receive messages from the queue, 
    // this is used to send the transaction request to the cobol service and receive the response from the cobol service
@@ -102,6 +110,9 @@ public class TransactionController {
    private String callCobolService(long senderId, long receiverId, int currentBalanceCents, int deductionAmountCents) {
 
         // Format the request as a fixed-length string
+        // format the senderid , receiverid , currentbalancecents , and deductionamountcents as fixed-length strings before sending them to the COBOL service
+        // this is called as raw data block, because we are sending the data as a raw string to the COBOL service, and 
+        // the COBOL service will parse the string and extract the data from it
         String source = String.format("%010d", senderId); // 10 chars
         String destination = String.format("%010d", receiverId); // 10 chars
         String currentBalance = String.format("%08d", currentBalanceCents); // 8 chars
@@ -112,6 +123,9 @@ public class TransactionController {
         System.out.println("Raw COBOL Request: " + rawCobolRequest); // log the raw COBOL request
 
         // create a response object to receive the response from the COBOL service
+        // send the raw COBOL request to the JMS queue and wait for a response
+        // we use queue as the communication channel between the springboot application and the COBOL service, 
+        // because the COBOL service is running on a different server and we want to decouple the two services
         Object response =  jmsMessagingTemplate.convertSendAndReceive("sentrypay-queue", rawCobolRequest , String.class); // send the raw COBOL request to the JMS queue
 
 
