@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
- 
+import java.time.LocalDateTime;
 import com.sentrypay.backend.domain.user.repository.WalletRepository;
+import com.sentrypay.backend.domain.user.entity.TransactionEntity;
+import com.sentrypay.backend.domain.user.repository.TransactionRepository;
 import com.sentrypay.backend.dto.TransactionRequest;
 
 import jakarta.transaction.Transactional;
@@ -27,10 +29,12 @@ import jakarta.transaction.Transactional;
 public class TransactionController {
 
     private final WalletRepository walletRepository; // declare a wallet repository for database operations
+    private final TransactionRepository transactionRepository; // declare a transaction repository for database operations
 
 
-    public TransactionController(WalletRepository walletRepository) {
+    public TransactionController(WalletRepository walletRepository , TransactionRepository transactionRepository) {
         this.walletRepository = walletRepository; // initialize the wallet repository
+        this.transactionRepository = transactionRepository; // initialize the transaction repository
     }
 
     
@@ -66,7 +70,7 @@ public class TransactionController {
         // we lock it because we want to make sure the balance is not changed by another user's transaction while we are processing this one
         // by doing this , user A cannot send money to user B while user B is sending money to user A, because the wallet is locked for update until the transaction is complete
         var senderWallet = walletRepository.findByUserIdWithLock(senderId).orElseThrow(() -> new RuntimeException("Sender wallet not found"));
-
+        var receiverWallet = walletRepository.findByUserIdWithLock(receiverId).orElseThrow(() -> new RuntimeException("Receiver wallet not found"));
 
         // convert the sender's balance and the transaction amount to cents (integer representation) for COBOL processing
         int currentBalanceCents = BigDecimal.valueOf(senderWallet.getBalance()).multiply(new BigDecimal("100")).intValue(); // convert balance to cents
@@ -89,6 +93,22 @@ public class TransactionController {
             senderWallet.setBalance(newBalance);
             walletRepository.save(senderWallet); // save the updated wallet to the database
             System.out.println("✅ Updated sender's wallet balance to: " + newBalance);
+
+            // update the receiver's wallet balance in the database
+            receiverWallet.setBalance(receiverWallet.getBalance() + amount.floatValue());
+            walletRepository.save(receiverWallet); // save the updated wallet to the database
+            System.out.println("✅ Updated receiver's wallet balance to: " + receiverWallet.getBalance());
+
+            // log the transaction in the database
+            TransactionEntity transactionEntity = new TransactionEntity();
+            transactionEntity.setSender(senderWallet.getUser());
+            transactionEntity.setReceiver(receiverWallet.getUser());
+            transactionEntity.setAmount(amount.doubleValue());
+            transactionEntity.setCreatedAt(LocalDateTime.now());
+            transactionRepository.save(transactionEntity);
+            
+            System.out.println("✅ Logged transaction in the database: Sender ID: " + senderId + ", Receiver ID: " + receiverId + ", Amount: " + amount.floatValue());
+            
         }
         
 
