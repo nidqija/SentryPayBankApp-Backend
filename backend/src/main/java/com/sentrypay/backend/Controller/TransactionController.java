@@ -58,7 +58,8 @@ public class TransactionController {
         // change receiverid from string to long
         long receiverId = Long.parseLong(transactionRequest.receiverId());
 
-        // change the amount from Bigdecimal to int and multiply by 100 to convert to cents
+        // change the
+        // amount from Bigdecimal to int and multiply by 100 to convert to cents
         BigDecimal amount = transactionRequest.amount();
 
         // retrieve the sender's wallet from the database using the senderId, and lock it for update to prevent concurrent modifications
@@ -75,6 +76,20 @@ public class TransactionController {
         // cobol only accepts fixed-length strings , so we need to format the senderId, receiverId, currentBalanceCents, and deductionAmountCents as fixed-length strings before sending them to the COBOL service
         // example: if senderId is 123, we need to format it as 0000000123 (10 chars) before sending it to the COBOL service
         String cobolResponse = callCobolService(senderId, receiverId, currentBalanceCents, deductionAmountCents);
+
+        if (cobolResponse.contains("ERROR")){
+            return ResponseEntity.badRequest().body("Transaction failed: " + cobolResponse);
+        } else {
+            
+
+            int newBalanceCents = Integer.parseInt(cobolResponse); // parse the new balance from the COBOL response
+            float newBalance = newBalanceCents / 100.0f;
+
+            // update the sender's wallet balance in the database
+            senderWallet.setBalance(newBalance);
+            walletRepository.save(senderWallet); // save the updated wallet to the database
+            System.out.println("✅ Updated sender's wallet balance to: " + newBalance);
+        }
         
 
 

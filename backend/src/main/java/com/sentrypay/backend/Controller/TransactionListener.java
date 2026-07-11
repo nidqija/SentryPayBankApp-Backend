@@ -2,7 +2,7 @@ package com.sentrypay.backend.Controller;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 public class TransactionListener {
     
     @JmsListener(destination = "sentrypay-queue")
+	@SendTo("sentrypay-queue-response")
 	public String receiveTestMessage(String message) {
 		System.out.println("Received message from SentryPay queue: " + message);
 		StringBuilder responseBuilder = new StringBuilder();
 		String finalOutput = "990000000000";
+		String detectedNewBalance = null;
 
 	
 		try {
@@ -37,7 +39,7 @@ public class TransactionListener {
 
 			ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand , sourceAccount, destinationAccount, currentBalanceString, String.valueOf(deductedamount));
 
-			processBuilder.redirectErrorStream(true); // Merge error stream with output stream
+			processBuilder.redirectErrorStream(false); // Merge error stream with output stream
 
 			Process process = processBuilder.start();
 
@@ -45,20 +47,33 @@ public class TransactionListener {
 
 			String line;
 
-			System.out.println("📜 COBOL Engine Output:");
+			/*System.out.println("📜 COBOL Engine Output:");
 
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
 				responseBuilder.append(line).append("\n");
-			}
+			} */
 
+			System.out.println("📜 COBOL Engine Output:");
+			while((line = reader.readLine()) != null) {
+				System.out.println("[COBOL STDOUT]" + line);
+
+				if(line.trim().matches("\\d{8,13}")) { // check if the line contains only digits and has a length of 8 to 13 characters
+					detectedNewBalance = line.trim();
+					System.out.println("✅ Detected new balance: " + detectedNewBalance);
+
+				} else if (line.contains("ERROR")){
+					detectedNewBalance = line.trim();
+					System.out.println("❌ Error detected in COBOL engine output: " + detectedNewBalance);
+				}
+			}
 
 			int exitCode = process.waitFor();
 
 			System.out.println("COBOL engine process exited with code: " + exitCode);
 
-			if(exitCode == 0 && responseBuilder.length() >0){
-				finalOutput = responseBuilder.toString().trim();
+			if(exitCode == 0 && detectedNewBalance != null && detectedNewBalance.matches("\\d{8,13}")) {
+				finalOutput = detectedNewBalance;
 				System.out.println("✅ COBOL Engine Response: " + finalOutput);
 			}
 

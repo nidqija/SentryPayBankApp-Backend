@@ -92,6 +92,6 @@
 
            *> The ONLY output on standard STDOUT stream. Java will capture 
            *> this perfectly.
-           DISPLAY "0000054073551".
+           DISPLAY WS-NEW-BALANCE.
 
            STOP RUN.
