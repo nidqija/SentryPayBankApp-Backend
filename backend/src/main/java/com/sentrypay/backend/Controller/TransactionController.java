@@ -1,6 +1,7 @@
 package com.sentrypay.backend.Controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.time.LocalDateTime;
-import com.sentrypay.backend.domain.user.repository.WalletRepository;
+
 import com.sentrypay.backend.domain.user.entity.TransactionEntity;
 import com.sentrypay.backend.domain.user.repository.TransactionRepository;
+import com.sentrypay.backend.domain.user.repository.WalletRepository;
 import com.sentrypay.backend.dto.TransactionRequest;
 
 import jakarta.transaction.Transactional;
@@ -113,7 +114,8 @@ public class TransactionController {
         
 
 
-        return ResponseEntity.ok("Transaction request sent to user with ID: " + senderId + ". COBOL service response: " + cobolResponse);
+        // return the response in form of String back to client side 
+        return ResponseEntity.ok(cobolResponse);
     }
 
 
