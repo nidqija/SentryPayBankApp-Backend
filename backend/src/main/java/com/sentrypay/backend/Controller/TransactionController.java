@@ -18,6 +18,12 @@ import com.sentrypay.backend.domain.user.entity.TransactionEntity;
 import com.sentrypay.backend.domain.user.repository.TransactionRepository;
 import com.sentrypay.backend.domain.user.repository.WalletRepository;
 import com.sentrypay.backend.dto.TransactionRequest;
+import com.sentrypay.backend.dto.WalletResponse;
+import com.sentrypay.backend.dto.TransactionHistoryResponse;
+import com.sentrypay.backend.domain.user.repository.TransactionHistoryRepository;
+import java.util.List;
+
+
 
 import jakarta.transaction.Transactional;
 
@@ -31,11 +37,13 @@ public class TransactionController {
 
     private final WalletRepository walletRepository; // declare a wallet repository for database operations
     private final TransactionRepository transactionRepository; // declare a transaction repository for database operations
+    private final TransactionHistoryRepository transactionHistoryRepository; // declare a transaction history repository for database operations
 
 
-    public TransactionController(WalletRepository walletRepository , TransactionRepository transactionRepository) {
+    public TransactionController(WalletRepository walletRepository , TransactionRepository transactionRepository , TransactionHistoryRepository transactionHistoryRepository) {
         this.walletRepository = walletRepository; // initialize the wallet repository
         this.transactionRepository = transactionRepository; // initialize the transaction repository
+        this.transactionHistoryRepository = transactionHistoryRepository; // initialize the transaction history repository
     }
 
     
@@ -169,6 +177,31 @@ public class TransactionController {
         return response != null ? response.toString() : "No response from COBOL service"; // return the response from the COBOL service
     }
 
+
+   @GetMapping("/transaction-history/{senderId}/{receiverId}") // define the endpoint for transaction history requests
+   public ResponseEntity<TransactionHistoryResponse> getTransactionHistory(@PathVariable Long senderId, @PathVariable Long receiverId) {
+        // retrieve the transaction history for the given userId from the database
+        List<TransactionEntity> transactionHistory = transactionHistoryRepository.findTransactionHistoryBySenderOrReceiverId(senderId, receiverId);
+
+        if (transactionHistory != null) {
+            // create a response object to return the transaction history to the client
+            TransactionHistoryResponse response = new TransactionHistoryResponse(
+
+                // return only the first transaction in the list for now, 
+                // we can modify this later to return the entire list of transactions
+                transactionHistory.get(0).getId().toString(),
+                transactionHistory.get(0).getSender().getId().toString(),
+                transactionHistory.get(0).getReceiver().getId().toString(),
+                BigDecimal.valueOf(transactionHistory.get(0).getAmount()),
+                transactionHistory.get(0).getCreatedAt()
+            );
+
+            return ResponseEntity.ok(response); // return the transaction history response to the client
+        } else {
+            return ResponseEntity.notFound().build(); // return a 404 response if no transaction history is found
+        }
+    }
+   
 
 
 }
