@@ -1,6 +1,5 @@
 package com.sentrypay.backend.Controller;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -146,10 +145,8 @@ public class ServicesController {
     
         double servicePrice = 10.0; // Replace with actual service price
 
-
-        String message = "Processing subscription payment for user " + userId + " and service " + serviceId + " with amount " + servicePrice;
-
-        sendMessageToQueue(message);
+        // send the params to jmt function 
+        sendMessageToQueue(userId , serviceId , servicePrice);
 
         return ResponseEntity.ok("Subscription payment processing initiated for user " + userId + " and service " + serviceId);
 
@@ -159,9 +156,25 @@ public class ServicesController {
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
-    private String sendMessageToQueue(String message) {
-        jmsMessagingTemplate.convertAndSend("sentrypay-service-queue", message);
-        return "Message sent to SentryPay service transaction queue: " + message;
+    // receives the params parsed by function above
+    private String sendMessageToQueue(long userId , String serviceId , double servicePrice) {
+      
+        // convert params to a fixed length string message to send to the queue
+        String userIdString = String.format("%010d", userId); // Pad userId to 10 digits
+        String serviceIdString = String.format("%-10s", serviceId); // Pad serviceId to 10 digits
+        String servicePriceString = String.format("%08.2f", servicePrice).replace(".", ""); // Pad servicePrice to 8 digits and remove decimal point
+    
+        // merge the strings to a single message string argument
+        String message = userIdString + serviceIdString + servicePriceString;
+
+        // log for debugging purposes
+        System.out.println("Sending message to SentryPay service transaction queue: " + message);
+
+        // send the message to sentry pay service transaction queue and wait for a response
+        Object response = jmsMessagingTemplate.convertSendAndReceive("sentrypay-service-queue", message , String.class);
+
+        // return to terminal for debugging purposes
+        return "Response from SentryPay service transaction queue: " + response;
     }
 
 }

@@ -48,6 +48,7 @@
                 DISPLAY "ERROR: Insufficient funds for service charges."
 
 
+
                 UPON SYSERR
                    MOVE 0 TO USER-WS-NEW-BALANCE
 
