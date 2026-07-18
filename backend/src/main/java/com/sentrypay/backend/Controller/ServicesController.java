@@ -1,5 +1,6 @@
 package com.sentrypay.backend.Controller;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -103,9 +104,10 @@ public class ServicesController {
     @PostMapping("/users/{userId}/subscription-payment/{serviceId}")
     public ResponseEntity<String> processSubscriptionPayment(@PathVariable Long userId, @PathVariable String serviceId) {
         
+        var userWalletBalance = 0.0;
+        var servicePrice = 0.0;
 
-
-        /*  List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
+         List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
 
 
         if(serviceSubscriptions.isEmpty()) {
@@ -121,34 +123,35 @@ public class ServicesController {
             return ResponseEntity.notFound().build();
         }
 
-       if (subscription.getEndDate() == LocalDateTime.now()){
+       if (subscription.getEndDate() != LocalDateTime.now()){
             
           var newEndDate = LocalDateTime.now().plusMonths(1);
 
            var userWallet = subscription.getUser().getWallet();
 
-           var servicePrice = subscription.getService().getServicePrice();
+
+           // convert wallet balance to double , convert to string first then to double
+           userWalletBalance = Double.parseDouble(String.valueOf(userWallet.getBalance()));
+
+           servicePrice = subscription.getService().getServicePrice();
 
            if (userWallet.getBalance() < servicePrice){
              return ResponseEntity.badRequest().body("Insufficient balance in user wallet to process subscription payment.");
            }
 
 
-           String cobolCommand = "cobol_engine_command --userId " + userId + " --serviceId " + serviceId + " --amount " + servicePrice;
-
-           sendMessageToQueue(cobolCommand);
-       }
-
-
-        return ResponseEntity.ok("Subscription payment processed for user " + userId + " and service " + serviceId); */
-
+        } else {
+            return ResponseEntity.badRequest().body("Subscription is still active. No payment required.");
+        }
     
-        double servicePrice = 10.0; // Replace with actual service price
+    /*    double servicePrice = 10.0; // Replace with actual service price
+
+        double userWalletBalance = 100.0; */ 
 
         // send the params to jmt function 
-        sendMessageToQueue(userId , serviceId , servicePrice);
+        sendMessageToQueue(userWalletBalance , serviceId , servicePrice);
 
-        return ResponseEntity.ok("Subscription payment processing initiated for user " + userId + " and service " + serviceId);
+        return ResponseEntity.ok("Subscription payment processing initiated for user " + userId + " and service " + serviceId); 
 
     }
 
@@ -157,15 +160,16 @@ public class ServicesController {
     private JmsMessagingTemplate jmsMessagingTemplate;
 
     // receives the params parsed by function above
-    private String sendMessageToQueue(long userId , String serviceId , double servicePrice) {
+    private String sendMessageToQueue(double userWalletBalance , String serviceId , double servicePrice) {
       
         // convert params to a fixed length string message to send to the queue
-        String userIdString = String.format("%010d", userId); // Pad userId to 10 digits
+        String userWalletBalanceString = String.format("%010.2f", userWalletBalance).replace(".", ""); // Pad userWalletBalance to 10 digits and remove decimal point
         String serviceIdString = String.format("%-10s", serviceId); // Pad serviceId to 10 digits
         String servicePriceString = String.format("%08.2f", servicePrice).replace(".", ""); // Pad servicePrice to 8 digits and remove decimal point
     
         // merge the strings to a single message string argument
-        String message = userIdString + serviceIdString + servicePriceString;
+        // example of how the message gonna look like: "0000010000SERVICE1 00001000"
+        String message = userWalletBalanceString + serviceIdString + servicePriceString;
 
         // log for debugging purposes
         System.out.println("Sending message to SentryPay service transaction queue: " + message);

@@ -3,8 +3,9 @@ package com.sentrypay.backend.Controller;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import org.springframework.messaging.handler.annotation.SendTo;
+
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,31 +19,37 @@ public class ServiceListener {
         System.out.println("Received message from SentryPay service transaction queue: " + message);
         String response  = "Service transaction message received successfully: " + message;
 
-
         String finalOutput = "990000000000";
-        // String message = "Processing subscription payment for user " + userId + " and service " + serviceId + " with amount " + servicePrice;
-
+        // example of how the message gonna look like: "0000010000SERVICE1 00001000"
 
         try {
-            // Parse the fixed-length string message to extract userId, serviceId, and servicePrice
-            String userIdString = message.substring(0, 10).trim();
-            String serviceId = message.substring(10, 20).trim();
-            String servicePriceString = message.substring(20, 27).trim();
+
+            // Parse the fixed-length string message to extract userWalletBalance, serviceId, and servicePrice
+            String userWalletBalanceString = message.substring(0, 9).trim();
+            String serviceId = message.substring(9, 19).trim();
+            String servicePriceString = message.substring(20, 26).trim();
             double servicePrice = Double.parseDouble(servicePriceString) / 100.0; // Convert to decimal format
+
+            // Convert userWalletBalanceString to a double
+            double userWalletBalance = Double.parseDouble(userWalletBalanceString) / 100.0; // Convert to decimal format
 
 
             // log the parsed values for debugging purposes
-            System.out.println("   -> Parsed User ID : " + userIdString);
+            System.out.println("   -> Parsed User Wallet Balance : " + userWalletBalance);
             System.out.println("   -> Parsed Service ID : " + serviceId);
             System.out.println("   -> Parsed Service Price : " + servicePrice);
 
             // Spawn the native COBOL engine process to handle the service transaction
             System.out.println("🚀 Spawning native COBOL engine process...");
 
+            // explicitly define the path to the COBOL engine executable for service deduction
             String cobolCommand = "../core-transactions/payload/service_deduction.exe";
 
             // use processbuilder to run the cobol engine executable with the parsed parameters
-            ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand, userIdString , serviceId , String.valueOf(servicePrice));
+            // since cobol engine requires only two arguments , which is userWalletBalance and servicePrice, 
+            // we will pass only those two arguments to the processbuilder
+
+            ProcessBuilder processBuilder = new ProcessBuilder(cobolCommand, userWalletBalanceString , String.valueOf(servicePrice));
 
             // set the error stream to be false by default, so that we can capture the output of the process
             processBuilder.redirectErrorStream(false); // Merge error stream with output stream
@@ -71,17 +78,13 @@ public class ServiceListener {
             System.out.println("COBOL engine process exited with code: " + exitCode);
 
             // if the exit code is 0, then the process completed successfully and we can capture the output of the process
-            if(exitCode == 0 && line != null && !line.isEmpty()) {
-                finalOutput = line.trim();
-                System.out.println("Final output from COBOL engine: " + finalOutput);
+            if(exitCode == 0 ){
+                finalOutput = "000000000000";
+                System.out.println("✅ COBOL Engine Response: " + finalOutput);
             } else {
-
-                // if the exit code is not 0, then the process failed and we can log an error message
-                System.err.println("COBOL engine did not produce a valid output.");
-                response = "Error processing service transaction message: COBOL engine did not produce a valid output.";
+                finalOutput = "990000000000";
+                System.out.println("❌ COBOL Engine Error: " + finalOutput);
             }
-
-
         } catch (Exception e) {
             System.err.println("Error parsing message: " + e.getMessage());
             response = "Error processing service transaction message: " + e.getMessage();
