@@ -1,0 +1,100 @@
+       IDENTIFICATION DIVISION.
+
+
+       PROGRAM-ID. SERVICE-DEDUCTION.
+
+       DATA DIVISION.
+
+       WORKING-STORAGE SECTION.
+
+       *> DEFINE VARIABLES WITH A NUMFIELD OF 8 DIGITS
+       *> ARGUMENTS PASSED FROM JAVA SERVICE CONTROLLER AND ACCEPTED AS STRING
+       01  CURRENT-USER-BALANCE-STR   PIC X(8).
+       01  CURRENT-USER-BALANCE-NUM     PIC 9(8).
+
+       01  CURRENT-SERVICE-PRICE-STR  PIC X(8).
+       01  CURRENT-SERVICE-PRICE-NUM     PIC 9(8).
+      
+       01  USER-WS-NEW-BALANCE             PIC 9(8).
+       01  WS-INCOMING-DATA-BLOCK      PIC X(100).
+
+
+       PROCEDURE DIVISION.
+       MAIN-PROCEDURE.
+
+           ACCEPT WS-INCOMING-DATA-BLOCK FROM COMMAND-LINE.
+
+           IF WS-INCOMING-DATA-BLOCK = SPACES
+                   MOVE "0" TO CURRENT-USER-BALANCE-STR
+                   MOVE "0" TO CURRENT-SERVICE-PRICE-STR
+                   MOVE 0 TO USER-WS-NEW-BALANCE
+
+
+           ELSE
+
+               UNSTRING WS-INCOMING-DATA-BLOCK DELIMITED BY ALL SPACES
+                   INTO CURRENT-USER-BALANCE-STR
+                        CURRENT-SERVICE-PRICE-STR
+
+               
+
+               MOVE FUNCTION NUMVAL(CURRENT-USER-BALANCE-STR) TO 
+               CURRENT-USER-BALANCE-NUM
+
+               MOVE FUNCTION NUMVAL(CURRENT-SERVICE-PRICE-STR) TO
+               CURRENT-SERVICE-PRICE-NUM
+
+               IF CURRENT-USER-BALANCE-NUM < CURRENT-SERVICE-PRICE-NUM
+                DISPLAY "ERROR: Insufficient funds for service charges."
+
+
+                UPON SYSERR
+                   MOVE 0 TO USER-WS-NEW-BALANCE
+
+               ELSE
+                SUBTRACT CURRENT-SERVICE-PRICE-NUM FROM 
+                CURRENT-USER-BALANCE-NUM 
+                GIVING USER-WS-NEW-BALANCE
+               END-IF
+           END-IF.
+
+
+           DISPLAY "================================" UPON SYSERR.
+           DISPLAY " NATIVE COBOL SERVICE PAY CORE ONLINE  " UPON SYSERR.
+           DISPLAY "================================" UPON SYSERR.
+           DISPLAY "COBOL PARSED DATA EXTRACT:" UPON SYSERR.
+           DISPLAY "CURRENT USER BALANCE: " CURRENT-USER-BALANCE-NUM 
+           UPON SYSERR.
+           DISPLAY "CURRENT SERVICE PRICE: " CURRENT-SERVICE-PRICE-NUM
+           UPON SYSERR.
+           DISPLAY "NEW USER BALANCE: " USER-WS-NEW-BALANCE UPON SYSERR.
+           DISPLAY "================================" UPON SYSERR.
+
+           DISPLAY USER-WS-NEW-BALANCE UPON SYSOUT.
+
+           STOP RUN.
+
+
+
+
+
+               
+
+
+               
+
+               
+
+
+
+
+       
+
+
+       
+
+
+
+
+       
+

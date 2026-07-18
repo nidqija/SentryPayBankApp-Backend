@@ -2,6 +2,7 @@ package com.sentrypay.backend.Controller;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sentrypay.backend.domain.user.entity.TransactionEntity;
+import com.sentrypay.backend.domain.user.repository.TransactionHistoryRepository;
 import com.sentrypay.backend.domain.user.repository.TransactionRepository;
 import com.sentrypay.backend.domain.user.repository.WalletRepository;
-import com.sentrypay.backend.dto.TransactionRequest;
-import com.sentrypay.backend.dto.WalletResponse;
 import com.sentrypay.backend.dto.TransactionHistoryResponse;
-import com.sentrypay.backend.domain.user.repository.TransactionHistoryRepository;
-import java.util.List;
-
-
+import com.sentrypay.backend.dto.TransactionRequest;
 
 import jakarta.transaction.Transactional;
 
@@ -178,31 +175,37 @@ public class TransactionController {
     }
 
 
-   @GetMapping("/transaction-history/{senderId}/{receiverId}") // define the endpoint for transaction history requests
-   public ResponseEntity<TransactionHistoryResponse> getTransactionHistory(@PathVariable Long senderId, @PathVariable Long receiverId) {
+   @GetMapping("/get-recent-transactions/{userId}") // define the endpoint for transaction history requests
+   public ResponseEntity<List<TransactionHistoryResponse>> getTransactionHistory(@PathVariable Long userId) {
         // retrieve the transaction history for the given userId from the database
-        List<TransactionEntity> transactionHistory = transactionHistoryRepository.findTransactionHistoryBySenderOrReceiverId(senderId, receiverId);
+        List<TransactionEntity> transactionHistory = transactionHistoryRepository.findTransactionHistoryBySenderOrReceiverId(userId, userId);
 
-        if (transactionHistory != null) {
-            // create a response object to return the transaction history to the client
-            TransactionHistoryResponse response = new TransactionHistoryResponse(
 
-                // return only the first transaction in the list for now, 
-                // we can modify this later to return the entire list of transactions
-                transactionHistory.get(0).getId().toString(),
-                transactionHistory.get(0).getSender().getId().toString(),
-                transactionHistory.get(0).getReceiver().getId().toString(),
-                BigDecimal.valueOf(transactionHistory.get(0).getAmount()),
-                transactionHistory.get(0).getCreatedAt()
-            );
-
-            return ResponseEntity.ok(response); // return the transaction history response to the client
-        } else {
-            return ResponseEntity.notFound().build(); // return a 404 response if no transaction history is found
+        if(transactionHistory.isEmpty()) {
+            return ResponseEntity.noContent().build(); // return 204 No Content if no transactions found
         }
+
+        if(transactionHistory != null && !transactionHistory.isEmpty()){
+
+            List<TransactionHistoryResponse> transactionHistoryResponses = transactionHistory.stream()
+            .map(tx -> new TransactionHistoryResponse(
+                tx.getId().toString(),
+                tx.getSender().getId().toString(),
+                tx.getReceiver().getFullname(),
+                BigDecimal.valueOf(tx.getAmount()),
+                tx.getCreatedAt()
+            )).toList();
+
+            return ResponseEntity.ok(transactionHistoryResponses); // return the transaction history response to the client
+        } else {
+            
+            return ResponseEntity.ok(List.of());
+        }
+
+    
+           
     }
    
-
 
 }
 

@@ -1,4 +1,4 @@
-package com.sentrypay.backend.Controller;
+/*package com.sentrypay.backend.Controller;
 
 import java.util.List;
 
@@ -14,6 +14,7 @@ import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepositor
 import com.sentrypay.backend.dto.ServicesResponse;
 import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 
 @RestController
@@ -95,4 +96,49 @@ public class ServicesController {
 
     };
 
-}
+
+    @PostMapping("/users/{userId}/subscription-payment/{serviceId}")
+    public ResponseEntity<String> processSubscriptionPayment(@PathVariable Long userId, @PathVariable Long serviceId) {
+        
+
+
+        List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
+
+
+        if(serviceSubscriptions.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        ServiceSubscriptionEntity subscription = serviceSubscriptions.stream()
+            .filter(sub -> sub.getService().getServicesId().equals(serviceId))
+            .findFirst()
+            .orElse(null);
+
+        if (subscription == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+       if (subscription.getEndDate() == DateTime.now()){
+            
+           var newEndDate = DateTime.now().plusMonths(1);
+
+           var userWallet = subscription.getUser().getWallet();
+
+           var servicePrice = subscription.getService().getServicePrice();
+
+           if (userWallet.getBalance() < servicePrice){
+             return ResponseEntity.badRequest().body("Insufficient balance in user wallet to process subscription payment.");
+           }
+
+           
+
+
+
+           
+       }
+
+
+        return ResponseEntity.ok("Subscription payment processed for user " + userId + " and service " + serviceId);
+    }
+
+}*/

@@ -1,14 +1,14 @@
 package com.sentrypay.backend.domain.user.repository;
 
 
-import org.springframework.stereotype.Repository;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.sentrypay.backend.domain.user.entity.TransactionEntity;
-import org.springframework.data.repository.query.Param;
-import java.util.Optional;
-import java.util.List;
 
 @Repository
 public interface TransactionHistoryRepository extends JpaRepository<TransactionEntity, Long> {
