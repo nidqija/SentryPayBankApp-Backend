@@ -1,20 +1,24 @@
-/*package com.sentrypay.backend.Controller;
+package com.sentrypay.backend.Controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import java.time.format.DateTimeFormatter;
-import com.sentrypay.backend.domain.user.entity.ServicesEntity;
-import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
-import com.sentrypay.backend.domain.user.repository.ServicesRepository;
-import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepository;
-import com.sentrypay.backend.dto.ServicesResponse;
-import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
+import com.sentrypay.backend.domain.user.entity.ServicesEntity;
+import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepository;
+import com.sentrypay.backend.domain.user.repository.ServicesRepository;
+import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
+import com.sentrypay.backend.dto.ServicesResponse;
 
 
 @RestController
@@ -98,11 +102,11 @@ public class ServicesController {
 
 
     @PostMapping("/users/{userId}/subscription-payment/{serviceId}")
-    public ResponseEntity<String> processSubscriptionPayment(@PathVariable Long userId, @PathVariable Long serviceId) {
+    public ResponseEntity<String> processSubscriptionPayment(@PathVariable Long userId, @PathVariable String serviceId) {
         
 
 
-        List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
+        /*  List<ServiceSubscriptionEntity> serviceSubscriptions = serviceSubscriptionRepository.findByUserId(userId);
 
 
         if(serviceSubscriptions.isEmpty()) {
@@ -110,7 +114,7 @@ public class ServicesController {
         }
 
         ServiceSubscriptionEntity subscription = serviceSubscriptions.stream()
-            .filter(sub -> sub.getService().getServicesId().equals(serviceId))
+            .filter(sub -> String.valueOf(sub.getService().getServicesId()).equals(serviceId))
             .findFirst()
             .orElse(null);
 
@@ -118,9 +122,9 @@ public class ServicesController {
             return ResponseEntity.notFound().build();
         }
 
-       if (subscription.getEndDate() == DateTime.now()){
+       if (subscription.getEndDate() == LocalDateTime.now()){
             
-           var newEndDate = DateTime.now().plusMonths(1);
+          var newEndDate = LocalDateTime.now().plusMonths(1);
 
            var userWallet = subscription.getUser().getWallet();
 
@@ -130,15 +134,34 @@ public class ServicesController {
              return ResponseEntity.badRequest().body("Insufficient balance in user wallet to process subscription payment.");
            }
 
-           
 
+           String cobolCommand = "cobol_engine_command --userId " + userId + " --serviceId " + serviceId + " --amount " + servicePrice;
 
-
-           
+           sendMessageToQueue(cobolCommand);
        }
 
 
-        return ResponseEntity.ok("Subscription payment processed for user " + userId + " and service " + serviceId);
+        return ResponseEntity.ok("Subscription payment processed for user " + userId + " and service " + serviceId); */
+
+    
+        double servicePrice = 10.0; // Replace with actual service price
+
+
+        String message = "Processing subscription payment for user " + userId + " and service " + serviceId + " with amount " + servicePrice;
+
+        sendMessageToQueue(message);
+
+        return ResponseEntity.ok("Subscription payment processing initiated for user " + userId + " and service " + serviceId);
+
     }
 
-}*/
+
+    @Autowired
+    private JmsMessagingTemplate jmsMessagingTemplate;
+
+    private String sendMessageToQueue(String message) {
+        jmsMessagingTemplate.convertAndSend("sentrypay-service-queue", message);
+        return "Message sent to SentryPay service transaction queue: " + message;
+    }
+
+}
