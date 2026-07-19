@@ -2,3 +2,9 @@ PHONE_NUMBER  	CREATED_AT  	ID  	ANTI_PHISHING_NAME  	DATEOF_BIRTH  	EMAIL  	FUL
 601234567	2026-07-02 01:33:31.940082	1	Shield-Sentry-2026	1995-05-12	alice@sentrypay.com	Alice Smith	hashed_password_123
 601987654	2026-07-02 01:33:31.943005	2	Safe-Harbor-99	1990-11-23	bob@sentrypay.com	Bob Jones	hashed_password_456
 601555555	2026-07-02 01:33:31.94351	3	Secure-Vault-88	1988-04-02	charlie@sentrypay.com	Charlie Brown	hashed_password_789
+
+
+
+Curl for API Testing:
+Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/users/1/subscription-payment/service_1"
+Invoke-RestMethod -Method Get -Uri "http://localhost:8080/api/users

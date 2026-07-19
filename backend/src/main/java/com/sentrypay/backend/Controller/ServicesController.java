@@ -64,6 +64,9 @@ public class ServicesController {
 
     }
 
+    
+
+
 
     @GetMapping("/users/{userId}/user-services")
     public ResponseEntity<ServiceSubscriptionResponse> getServicesByUserId(@PathVariable Long userId) {
@@ -180,5 +183,64 @@ public class ServicesController {
         // return to terminal for debugging purposes
         return "Response from SentryPay service transaction queue: " + response;
     }
+
+
+
+        @PostMapping("/users/{userId}/cancel-subscription-payment/{serviceId}")
+        public ResponseEntity<String> cancelSubscriptionPayment(@PathVariable Long userId , @PathVariable String serviceId){
+            
+
+           // retrieve the subscription status for the given userId and serviceId
+         /*  String userSubscriptionStatus = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
+            .map(subscription -> subscription.getStatus())
+            .orElse(null);  */ 
+            
+
+           String userSubscriptionName = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
+            .map(subscription -> 
+                subscription.getService().getServiceName())
+            .orElse(null);
+
+            String getUserName = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
+            .map(subscription -> subscription.getUser().getFullname())
+            .orElse(null);
+
+            
+                // log for debugging purposes
+               System.out.println("Attempting to cancel subscription payment for user " + userId + " and service " + serviceId );
+
+
+
+                // update the subscription status to cancelled in the database
+                serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
+                .ifPresent(subscription -> {
+                    subscription.setStatus("not active");
+                    serviceSubscriptionRepository.save(subscription);
+                });
+
+              String userSubscriptionStatus = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
+                .map(subscription -> subscription.getStatus())
+                .orElse(null);
+
+
+
+                
+
+                System.out.println("User subscription status: " + userSubscriptionStatus);
+                System.out.println("User subscription name: " + userSubscriptionName);
+                System.out.println("User name: " + getUserName);
+
+            
+
+                
+
+
+            return ResponseEntity.ok("Subscription payment cancellation initiated for user " + userId + " and service " + serviceId + ". Current subscription status: " + userSubscriptionStatus);
+
+            
+        }
+
+
+    
 
 }
