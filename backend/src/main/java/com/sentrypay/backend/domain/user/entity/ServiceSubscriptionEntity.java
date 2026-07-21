@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,12 @@ import lombok.NoArgsConstructor;
 // 9. Kotlin ViewModel
 
 @Entity // declares that this class is a JPA entity and will be mapped to a database table
-@Table(name = "user_service_subscriptions") // define the table name
+@Table(
+    name = "user_service_subscriptions" ,
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "service_id"}) // add unique constraint to ensure that a user can only have one subscription to a specific service , in case of race conditions
+    }
+) // define the table name
 @Data // generates getters, setters, toString, equals, and hashCode methods
 @NoArgsConstructor // generates a no-argument constructor
 @AllArgsConstructor // generates a constructor with all fields as parameters

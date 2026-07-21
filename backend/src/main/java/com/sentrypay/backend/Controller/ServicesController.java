@@ -3,8 +3,10 @@ package com.sentrypay.backend.Controller;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,15 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
 import com.sentrypay.backend.domain.user.entity.ServicesEntity;
-import com.sentrypay.backend.domain.user.entity.WalletEntity;
 import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepository;
 import com.sentrypay.backend.domain.user.repository.ServicesRepository;
 import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
 import com.sentrypay.backend.dto.ServicesResponse;
-import java.util.Optional;
+import com.sentrypay.backend.domain.user.repository.UserRepository;
+import com.sentrypay.backend.domain.user.entity.UserEntity;
 
 
 @RestController
@@ -31,12 +32,14 @@ public class ServicesController {
     // create an instance of the ServicesRepository to interact with the database
     private final ServicesRepository servicesRepository;
     private final ServiceSubscriptionRepository serviceSubscriptionRepository;
+    private final UserRepository userRepository;
 
 
     // instantiate the service repo or any other repo
-    public ServicesController(ServicesRepository servicesRepository , ServiceSubscriptionRepository serviceSubscriptionRepository) {
+    public ServicesController(ServicesRepository servicesRepository , ServiceSubscriptionRepository serviceSubscriptionRepository, UserRepository userRepository) {
         this.servicesRepository = servicesRepository;
         this.serviceSubscriptionRepository = serviceSubscriptionRepository;
+        this.userRepository = userRepository;
     }
 
     
@@ -255,8 +258,34 @@ public class ServicesController {
         @PostMapping("/users/{userId}/start-service-payment/{serviceId}")
         public ResponseEntity<String> startServicePayment(@PathVariable Long userId , @PathVariable String serviceId){
 
+            ServicesEntity getServiceById = servicesRepository.findByServicesId(serviceId).orElse(null);
 
-            
+            UserEntity getUserById = userRepository.findById(userId)
+            .orElse(null);
+
+            if (getUserById == null || getServiceById == null){
+                return ResponseEntity.notFound().build();
+            }
+
+            Optional<ServiceSubscriptionEntity> existingSubscription = serviceSubscriptionRepository.findByUserIdAndServiceId(userId, serviceId);
+
+
+            if (existingSubscription.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("User already has an active subscription for this service.");
+            }
+           
+
+            ServiceSubscriptionEntity newSubscription = new ServiceSubscriptionEntity();
+            newSubscription.setUser(getUserById);
+            newSubscription.setService(getServiceById);
+            newSubscription.setStatus("active");
+
+             
+
+            ServiceSubscriptionEntity savedSubscription = serviceSubscriptionRepository.save(newSubscription);
+
+            System.out.println("New subscription created with ID: " + savedSubscription.getId() + " for user " + getUserById.getFullname() + " and service " + getServiceById.getServiceName());
+
 
 
             return ResponseEntity.ok("Service payment initiation for user " + userId + " and service " + serviceId + " is successful.");

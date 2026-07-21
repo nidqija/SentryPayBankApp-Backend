@@ -19,10 +19,16 @@ public interface ServiceSubscriptionRepository extends JpaRepository<ServiceSubs
     List<ServiceSubscriptionEntity> findByUserId(Long id);
 
     // in the service subscription repository, we define a method to find a service subscription by user id and service id ( because we define userId as User and serviceId as Services in the service subscription entity )  , which returns an optional ServiceSubscriptionEntity object
-    @Query("SELECT s FROM ServiceSubscriptionEntity s WHERE s.user.id = :userId AND s.service.id = :serviceId")
+    @Query("SELECT s FROM ServiceSubscriptionEntity s WHERE s.user.id = :userId AND s.service.servicesId = :serviceId")
     Optional<ServiceSubscriptionEntity> findByUserIdAndServiceId(
         @Param("userId")Long userId, 
         @Param("serviceId")String serviceId
     );
+
+    /*@Query("INSERT INTO ServiceSubscriptionEntity (user, service) VALUES (:userId, :serviceId)")
+    Optional<ServiceSubscriptionEntity> insertNewSubscriptionService(
+        @Param("userId")Long userId, 
+        @Param("serviceId")String serviceId
+    );*/
 
 }
