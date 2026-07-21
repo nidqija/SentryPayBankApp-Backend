@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/get-recent-transactions/{userId}").permitAll()
                 .requestMatchers("/api/users/{userId}/subscription-payment/{serviceId}").permitAll()
                 .requestMatchers("/api/users/{userId}/cancel-subscription-payment/{serviceId}").permitAll()
+                .requestMatchers("/api/users/{userId}/start-service-payment/{serviceId}").permitAll()
                 .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .anyRequest().authenticated()
             )

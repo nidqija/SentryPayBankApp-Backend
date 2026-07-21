@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sentrypay.backend.domain.user.entity.ServiceSubscriptionEntity;
 import com.sentrypay.backend.domain.user.entity.ServicesEntity;
+import com.sentrypay.backend.domain.user.entity.WalletEntity;
 import com.sentrypay.backend.domain.user.repository.ServiceSubscriptionRepository;
 import com.sentrypay.backend.domain.user.repository.ServicesRepository;
 import com.sentrypay.backend.dto.ServiceSubscriptionResponse;
 import com.sentrypay.backend.dto.ServicesResponse;
+import java.util.Optional;
 
 
 @RestController
@@ -201,13 +203,21 @@ public class ServicesController {
                 subscription.getService().getServiceName())
             .orElse(null);
 
+            if(userSubscriptionName == null){
+                return ResponseEntity.notFound().build();
+            }
+
             String getUserName = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
             .map(subscription -> subscription.getUser().getFullname())
             .orElse(null);
 
+            if(getUserName == null){
+                return ResponseEntity.notFound().build();
+            }
+
             
                 // log for debugging purposes
-               System.out.println("Attempting to cancel subscription payment for user " + userId + " and service " + serviceId );
+            System.out.println("Attempting to cancel subscription payment for user " + userId + " and service " + serviceId );
 
 
 
@@ -218,28 +228,45 @@ public class ServicesController {
                     serviceSubscriptionRepository.save(subscription);
                 });
 
+
               String userSubscriptionStatus = serviceSubscriptionRepository.findByUserIdAndServiceId(userId ,serviceId)
                 .map(subscription -> subscription.getStatus())
                 .orElse(null);
 
 
-
-                
+                if(userSubscriptionStatus == null){
+                    return ResponseEntity.notFound().build();
+                }
 
                 System.out.println("User subscription status: " + userSubscriptionStatus);
                 System.out.println("User subscription name: " + userSubscriptionName);
                 System.out.println("User name: " + getUserName);
 
-            
-
                 
 
-
+            
             return ResponseEntity.ok("Subscription payment cancellation initiated for user " + userId + " and service " + serviceId + ". Current subscription status: " + userSubscriptionStatus);
 
             
         }
 
+
+
+        @PostMapping("/users/{userId}/start-service-payment/{serviceId}")
+        public ResponseEntity<String> startServicePayment(@PathVariable Long userId , @PathVariable String serviceId){
+
+
+            
+
+
+            return ResponseEntity.ok("Service payment initiation for user " + userId + " and service " + serviceId + " is successful.");
+            
+
+        }
+
+
+
+        
 
     
 
